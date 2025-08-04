@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>AgriSense – Farmer's Time & Weather Tool</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f9ff;
+      color: #0c4a6e;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      height: 100vh;
+      padding: 20px;
+    }
+
+    .view {
+      display: none;
+      text-align: center;
+      width: 100%;
+      max-width: 500px;
+      padding: 20px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+      animation: fadeIn 0.5s ease;
+    }
+
+    .view.active {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      color: #0891b2;
+      margin-bottom: 16px;
+    }
+
+    .icon {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+
+    .clock-time, .stopwatch-time, .timer-time {
+      font-size: 3rem;
+      font-weight: bold;
+      margin: 10px 0;
+      color: #0891b2;
+    }
+
+    #date {
+      font-size: 1.1rem;
+      color: #64748b;
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 12px 24px;
+      margin: 8px;
+      font-size: 1rem;
+      background: #0891b2;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0e7490;
+    }
+
+    input[type="number"] {
+      padding: 12px;
+      font-size: 1.2rem;
+      width: 60%;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      margin: 10px 0;
+    }
+
+    #weather-card {
+      margin-top: 20px;
+      padding: 16px;
+      background: #e0f2fe;
+      border-radius: 12px;
+      font-size: 1rem;
+      color: #0891b2;
+      width: 80%;
+    }
+
+    #weather-card img {
+      width: 60px;
+      margin-top: 8px;
+    }
+
+    .offline {
+      color: #b91c1c;
+      font-style: italic;
+    }
+
+    @media (orientation: landscape) {
+      .container {
+        flex-direction: row;
+        justify-content: space-around;
+      }
+      .view {
+        width: 45%;
+        height: 90vh;
+        justify-content: center;
+      }
+      h1 {
+        font-size: 1.5rem;
+      }
+      .clock-time, .stopwatch-time, .timer-time {
+        font-size: 2.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Portrait Upright: Alarm Clock -->
+    <div id="clock-view" class="view active">
+      <div class="icon">⏰</div>
+      <h1>Alarm Clock</h1>
+      <div class="clock-time" id="clock-time">00:00:00</div>
+      <p id="date">Loading date...</p>
+      <p><small>Set irrigation, spraying, or feeding alerts</small></p>
+    </div>
+
+    <!-- Landscape: Stopwatch + Weather -->
+    <div id="stopwatch-view" class="view">
+      <div class="icon">⏱️</div>
+      <h1>Work Timer</h1>
+      <div class="stopwatch-time" id="stopwatch-time">00:00:00</div>
+      <button id="start-stopwatch">Start</button>
+      <button id="reset-stopwatch">Reset</button>
+      <div id="weather-card">Fetching weather...</div>
+    </div>
+
+    <!-- Portrait Upside Down: Timer -->
+    <div id="timer-view" class="view">
+      <div class="icon">🔔</div>
+      <h1>Task Timer</h1>
+      <input type="number" id="timer-input" min="1" max="3600" placeholder="Duration (seconds)" />
+      <button id="set-timer">Set Timer</button>
+      <div class="timer-time" id="timer-time">00:00</div>
+      <button id="pause-timer" style="display:none;">Pause</button>
+      <button id="resume-timer" style="display:none;">Resume</button>
+    </div>
+  </div>
+
+  <script>
+    // OpenWeatherMap API Key (Hardcoded for demo)
+    const API_KEY = 'cd62b47e1f5ddf1856e61aec345408ca';
+
+    // Views
+    const clockView = document.getElementById('clock-view');
+    const stopwatchView = document.getElementById('stopwatch-view');
+    const timerView = document.getElementById('timer-view');
+
+    // Clock
+    const clockTime = document.getElementById('clock-time');
+    const dateElem = document.getElementById('date');
+
+    function updateClock() {
+      const now = new Date();
+      clockTime.textContent = now.toLocaleTimeString();
+      dateElem.textContent = now.toLocaleDateString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+      });
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Stopwatch
+    let stopWatchRunning = false;
+    let stopWatchStartTime = 0;
+    let stopWatchElapsed = 0;
+    let stopWatchInterval;
+
+    const stopWatchTime = document.getElementById('stopwatch-time');
+    const startStopwatchBtn = document.getElementById('start-stopwatch');
+    const resetStopwatchBtn = document.getElementById('reset-stopwatch');
+
+    startStopwatchBtn.addEventListener('click', () => {
+      if (!stopWatchRunning) {
+        stopWatchStartTime = Date.now() - stopWatchElapsed;
+        stopWatchInterval = setInterval(() => {
+          stopWatchElapsed = Date.now() - stopWatchStartTime;
+          const ms = stopWatchElapsed;
+          const s = Math.floor(ms / 1000) % 60;
+          const m = Math.floor(ms / 60000) % 60;
+          const h = Math.floor(ms / 3600000);
+          stopWatchTime.textContent = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }, 10);
+        startStopwatchBtn.textContent = 'Pause';
+        stopWatchRunning = true;
+      } else {
+        clearInterval(stopWatchInterval);
+        startStopwatchBtn.textContent = 'Resume';
+        stopWatchRunning = false;
+      }
+    });
+
+    resetStopwatchBtn.addEventListener('click', () => {
+      clearInterval(stopWatchInterval);
+      stopWatchElapsed = 0;
+      stopWatchTime.textContent = '00:00:00';
+      startStopwatchBtn.textContent = 'Start';
+      stopWatchRunning = false;
+    });
+
+    // Timer
+    let timerInterval = null;
+    let timerRemaining = 0;
+    let timerPaused = false;
+
+    const timerInput = document.getElementById('timer-input');
+    const setTimerBtn = document.getElementById('set-timer');
+    const timerTime = document.getElementById('timer-time');
+    const pauseTimerBtn = document.getElementById('pause-timer');
+    const resumeTimerBtn = document.getElementById('resume-timer');
+
+    setTimerBtn.addEventListener('click', () => {
+      if (timerInterval) return;
+      const seconds = parseInt(timerInput.value);
+      if (isNaN(seconds) || seconds <= 0 || seconds > 3600) {
+        alert("Please enter a valid duration (1-3600 seconds).");
+        return;
+      }
+      timerRemaining = seconds;
+      timerTime.textContent = formatTimer(seconds);
+      startTimer();
+    });
+
+    function formatTimer(totalSeconds) {
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        if (!timerPaused && timerRemaining > 0) {
+          timerRemaining--;
+          timerTime.textContent = formatTimer(timerRemaining);
+        } else if (timerRemaining === 0) {
+          clearInterval(timerInterval);
+          alert("⏰ Task Complete! Time to check your crop.");
+          if (navigator.vibrate) navigator.vibrate(500);
+          resetTimer();
+        }
+      }, 1000);
+    }
+
+    pauseTimerBtn.addEventListener('click', () => {
+      timerPaused = true;
+      pauseTimerBtn.style.display = 'none';
+      resumeTimerBtn.style.display = 'inline-block';
+    });
+
+    resumeTimerBtn.addEventListener('click', () => {
+      timerPaused = false;
+      pauseTimerBtn.style.display = 'inline-block';
+      resumeTimerBtn.style.display = 'none';
+    });
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      timerPaused = false;
+      timerRemaining = 0;
+      timerTime.textContent = '00:00';
+      timerInput.value = '';
+      pauseTimerBtn.style.display = 'none';
+      resumeTimerBtn.style.display = 'none';
+    }
+
+    // Weather
+    function fetchWeather() {
+      const weatherCard = document.getElementById('weather-card');
+      const cache = localStorage.getItem('weatherCache');
+      const cacheTime = localStorage.getItem('weatherCacheTime');
+
+      if (cache && cacheTime && (Date.now() - cacheTime < 5 * 60 * 1000)) {
+        weatherCard.innerHTML = cache + '<br><small class="offline">Offline mode</small>';
+        return;
+      }
+
+      if (!navigator.geolocation) {
+        weatherCard.textContent = 'Location not supported.';
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          const url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=metric`;
+
+          fetch(url)
+            .then(res => res.json())
+            .then(data => {
+              const html = `
+                <strong>${data.name}</strong><br>
+                🌡️ ${Math.round(data.main.temp)}°C | 💧 ${data.main.humidity}%<br>
+                ${data.weather[0].description}
+                <br>
+                <img src="https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png" alt="Weather" />
+              `;
+              weatherCard.innerHTML = html;
+              localStorage.setItem('weatherCache', html);
+              localStorage.setItem('weatherCacheTime', Date.now());
+            })
+            .catch(() => {
+              if (cache) {
+                weatherCard.innerHTML = cache + '<br><small class="offline">Using cached data</small>';
+              } else {
+                weatherCard.textContent = 'Weather unavailable.';
+              }
+            });
+        },
+        () => {
+          weatherCard.textContent = 'Enable location for weather updates.';
+        }
+      );
+    }
+
+    // Orientation Detection
+    let currentOrientation = '';
+
+    function handleOrientation(event) {
+      const beta = event.beta;
+      const gamma = event.gamma;
+
+      let orientation = '';
+
+      if (beta > 45 && beta < 140 && Math.abs(gamma) < 30) {
+        orientation = 'portrait-upright';
+      } else if (beta < -45 && beta > -140 && Math.abs(gamma) < 30) {
+        orientation = 'portrait-upside-down';
+      } else if (Math.abs(gamma) > 45 && Math.abs(beta) < 90) {
+        orientation = 'landscape';
+      } else {
+        return;
+      }
+
+      if (orientation !== currentOrientation) {
+        currentOrientation = orientation;
+        switchView(orientation);
+      }
+    }
+
+    function switchView(orientation) {
+      clockView.classList.remove('active');
+      stopwatchView.classList.remove('active');
+      timerView.classList.remove('active');
+
+      if (orientation === 'portrait-upright') {
+        clockView.classList.add('active');
+      } else if (orientation === 'landscape') {
+        stopwatchView.classList.add('active');
+        setTimeout(fetchWeather, 500);
+      } else if (orientation === 'portrait-upside-down') {
+        timerView.classList.add('active');
+      }
+    }
+
+    if (window.DeviceOrientationEvent) {
+      window.addEventListener('deviceorientation', handleOrientation, true);
+    } else {
+      alert('Device orientation not supported.');
+    }
+  </script>
+</body>
+</html>
