@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>AgriSense – Farmer's Time & Weather Tool</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
     * {
       margin: 0;
       padding: 0;
@@ -12,11 +14,120 @@
     }
 
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f0f9ff;
-      color: #0c4a6e;
+      font-family: 'Inter', sans-serif;
       height: 100vh;
       overflow: hidden;
+      transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
+    /* Animated background gradients */
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      opacity: 0.1;
+      background: radial-gradient(circle at 20% 50%, currentColor 0%, transparent 50%),
+                  radial-gradient(circle at 80% 20%, currentColor 0%, transparent 50%),
+                  radial-gradient(circle at 40% 80%, currentColor 0%, transparent 50%);
+      animation: backgroundPulse 20s ease-in-out infinite;
+      z-index: 0;
+    }
+
+    @keyframes backgroundPulse {
+      0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.1; }
+      33% { transform: scale(1.1) rotate(120deg); opacity: 0.15; }
+      66% { transform: scale(0.9) rotate(240deg); opacity: 0.08; }
+    }
+
+    /* Color palettes for different orientations with gradients */
+    body.portrait-upright {
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%);
+      color: #0c4a6e;
+    }
+    body.portrait-upright button {
+      background: linear-gradient(135deg, #0891b2, #0e7490);
+      box-shadow: 0 8px 25px rgba(8, 145, 178, 0.3);
+    }
+    body.portrait-upright button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 35px rgba(8, 145, 178, 0.4);
+    }
+    body.portrait-upright .view {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #0c4a6e;
+    }
+    body.portrait-upright .clock-time,
+    body.portrait-upright .stopwatch-time,
+    body.portrait-upright .timer-time {
+      background: linear-gradient(135deg, #0891b2, #0284c7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    body.landscape {
+      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #bbf7d0 100%);
+      color: #052e16;
+    }
+    body.landscape button {
+      background: linear-gradient(135deg, #16a34a, #15803d);
+      box-shadow: 0 8px 25px rgba(22, 163, 74, 0.3);
+    }
+    body.landscape button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 35px rgba(22, 163, 74, 0.4);
+    }
+    body.landscape .view {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #052e16;
+    }
+    body.landscape .clock-time,
+    body.landscape .stopwatch-time,
+    body.landscape .timer-time {
+      background: linear-gradient(135deg, #16a34a, #22c55e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    body.landscape #weather-card {
+      background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+      border: 1px solid rgba(22, 163, 74, 0.2);
+      color: #166534;
+    }
+
+    body.portrait-upside-down {
+      background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 50%, #fecaca 100%);
+      color: #450a0a;
+    }
+    body.portrait-upside-down button {
+      background: linear-gradient(135deg, #dc2626, #b91c1c);
+      box-shadow: 0 8px 25px rgba(220, 38, 38, 0.3);
+    }
+    body.portrait-upside-down button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 35px rgba(220, 38, 38, 0.4);
+    }
+    body.portrait-upside-down .view {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #450a0a;
+    }
+    body.portrait-upside-down .clock-time,
+    body.portrait-upside-down .stopwatch-time,
+    body.portrait-upside-down .timer-time {
+      background: linear-gradient(135deg, #dc2626, #ef4444);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
     .container {
@@ -27,6 +138,9 @@
       width: 100%;
       height: 100vh;
       padding: 20px;
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      z-index: 1;
     }
 
     .view {
@@ -34,141 +148,300 @@
       text-align: center;
       width: 100%;
       max-width: 500px;
-      padding: 20px;
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-      animation: fadeIn 0.5s ease;
+      padding: 30px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.1), 0 8px 25px rgba(0,0,0,0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .view::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.8s ease;
     }
 
     .view.active {
       display: flex;
       flex-direction: column;
       align-items: center;
+      animation: slideInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+    .view.active::before {
+      left: 100%;
+    }
+
+    @keyframes slideInUp {
+      from { 
+        opacity: 0; 
+        transform: translateY(30px) scale(0.95); 
+      }
+      to { 
+        opacity: 1; 
+        transform: translateY(0) scale(1); 
+      }
     }
 
     h1 {
-      font-size: 1.8rem;
-      color: #0891b2;
-      margin-bottom: 16px;
+      font-size: 2rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      letter-spacing: -0.02em;
+      position: relative;
     }
 
     .icon {
-      font-size: 2.5rem;
-      margin-bottom: 10px;
+      font-size: 3.5rem;
+      margin-bottom: 16px;
+      animation: iconFloat 3s ease-in-out infinite;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+    }
+
+    @keyframes iconFloat {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-8px) rotate(5deg); }
     }
 
     .clock-time, .stopwatch-time, .timer-time {
-      font-size: 3rem;
-      font-weight: bold;
-      margin: 10px 0;
-      color: #0891b2;
+      font-size: 3.5rem;
+      font-weight: 700;
+      margin: 20px 0;
+      font-feature-settings: "tnum";
+      letter-spacing: -0.02em;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      position: relative;
     }
 
     #date {
       font-size: 1.1rem;
-      color: #64748b;
-      margin-bottom: 20px;
+      font-weight: 400;
+      margin-bottom: 24px;
+      opacity: 0.8;
+      letter-spacing: 0.01em;
     }
 
     button {
-      padding: 12px 24px;
-      margin: 8px;
+      padding: 14px 28px;
+      margin: 10px 8px;
       font-size: 1rem;
-      background: #0891b2;
+      font-weight: 500;
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 12px;
       cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      font-family: inherit;
+      letter-spacing: 0.01em;
     }
 
-    button:hover {
-      background: #0e7490;
+    button::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+
+    button:active::before {
+      width: 300px;
+      height: 300px;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
     }
 
     input[type="number"] {
-      padding: 12px;
+      padding: 16px 20px;
       font-size: 1.2rem;
-      width: 60%;
-      border: 2px solid #ddd;
-      border-radius: 8px;
-      margin: 10px 0;
+      font-family: inherit;
+      width: 80%;
+      border: 2px solid rgba(0,0,0,0.1);
+      border-radius: 12px;
+      margin: 15px 0;
+      text-align: center;
+      transition: all 0.3s ease;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(10px);
+    }
+
+    input[type="number"]:focus {
+      outline: none;
+      border-color: currentColor;
+      box-shadow: 0 0 0 3px rgba(0,0,0,0.1);
+      transform: scale(1.02);
     }
 
     #weather-card {
-      margin-top: 20px;
-      padding: 16px;
-      background: #e0f2fe;
-      border-radius: 12px;
+      margin-top: 24px;
+      padding: 20px;
+      border-radius: 16px;
       font-size: 1rem;
-      color: #0891b2;
-      width: 80%;
+      width: 90%;
+      transition: all 0.3s ease;
+      animation: slideInUp 0.6s ease 0.3s both;
+      position: relative;
     }
 
     #weather-card img {
-      width: 60px;
-      margin-top: 8px;
+      width: 70px;
+      margin-top: 10px;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.1));
+      animation: iconFloat 4s ease-in-out infinite;
     }
 
     .offline {
-      color: #b91c1c;
       font-style: italic;
+      font-size: 0.9rem;
+      opacity: 0.7;
     }
 
+    .weather-link {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 10px 20px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 10px;
+      text-decoration: none;
+      color: inherit;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    .weather-link:hover {
+      background: rgba(255,255,255,0.5);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .pulse {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: currentColor;
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Enhanced responsive design */
     @media (orientation: landscape) {
       .container {
         flex-direction: row;
         justify-content: space-around;
+        gap: 20px;
       }
       .view {
         width: 45%;
-        height: 90vh;
+        height: 85vh;
         justify-content: center;
+        padding: 25px;
       }
       h1 {
-        font-size: 1.5rem;
+        font-size: 1.8rem;
       }
       .clock-time, .stopwatch-time, .timer-time {
-        font-size: 2.5rem;
+        font-size: 3rem;
       }
+      .icon {
+        font-size: 3rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .view {
+        padding: 20px;
+        margin: 10px;
+      }
+      .clock-time, .stopwatch-time, .timer-time {
+        font-size: 2.8rem;
+      }
+      h1 {
+        font-size: 1.6rem;
+      }
+    }
+
+    /* Success animations */
+    .success-flash {
+      animation: successFlash 0.6s ease;
+    }
+
+    @keyframes successFlash {
+      0% { background: rgba(34, 197, 94, 0.2); }
+      50% { background: rgba(34, 197, 94, 0.4); }
+      100% { background: rgba(34, 197, 94, 0.2); }
     }
   </style>
 </head>
-<body>
+<body class="portrait-upright">
   <div class="container">
     <!-- Portrait Upright: Alarm Clock -->
     <div id="clock-view" class="view active">
-      <div class="icon">⏰</div>
-      <h1>Alarm Clock</h1>
+      <div class="icon">🌅</div>
+      <h1>Farm Clock</h1>
       <div class="clock-time" id="clock-time">00:00:00</div>
       <p id="date">Loading date...</p>
-      <p><small>Set irrigation, spraying, or feeding alerts</small></p>
+      <p style="margin-top: 16px; opacity: 0.7; font-size: 0.95rem;">⏰ Perfect for irrigation scheduling<br>🌱 Track your daily farm routine</p>
     </div>
 
     <!-- Landscape: Stopwatch + Weather -->
     <div id="stopwatch-view" class="view">
-      <div class="icon">⏱️</div>
+      <div class="icon">⚡</div>
       <h1>Work Timer</h1>
       <div class="stopwatch-time" id="stopwatch-time">00:00:00</div>
-      <button id="start-stopwatch">Start</button>
-      <button id="reset-stopwatch">Reset</button>
-      <div id="weather-card">Fetching weather...</div>
+      <div>
+        <button id="start-stopwatch">Start Work</button>
+        <button id="reset-stopwatch">Reset</button>
+      </div>
+      <div id="weather-card">
+        <div class="loading-spinner"></div> Fetching weather...
+      </div>
     </div>
 
     <!-- Portrait Upside Down: Timer -->
     <div id="timer-view" class="view">
-      <div class="icon">🔔</div>
+      <div class="icon">⏳</div>
       <h1>Task Timer</h1>
       <input type="number" id="timer-input" min="1" max="3600" placeholder="Duration (seconds)" />
-      <button id="set-timer">Set Timer</button>
+      <button id="set-timer">Start Timer</button>
       <div class="timer-time" id="timer-time">00:00</div>
-      <button id="pause-timer" style="display:none;">Pause</button>
-      <button id="resume-timer" style="display:none;">Resume</button>
+      <div>
+        <button id="pause-timer" style="display:none;">Pause</button>
+        <button id="resume-timer" style="display:none;">Resume</button>
+      </div>
+      <p style="margin-top: 16px; opacity: 0.7; font-size: 0.95rem;">⏲️ Set reminders for spraying<br>🚜 Time your field operations</p>
     </div>
   </div>
 
@@ -180,6 +453,7 @@
     const clockView = document.getElementById('clock-view');
     const stopwatchView = document.getElementById('stopwatch-view');
     const timerView = document.getElementById('timer-view');
+    const body = document.body;
 
     // Clock
     const clockTime = document.getElementById('clock-time');
@@ -217,10 +491,12 @@
           stopWatchTime.textContent = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
         }, 10);
         startStopwatchBtn.textContent = 'Pause';
+        startStopwatchBtn.classList.add('pulse');
         stopWatchRunning = true;
       } else {
         clearInterval(stopWatchInterval);
         startStopwatchBtn.textContent = 'Resume';
+        startStopwatchBtn.classList.remove('pulse');
         stopWatchRunning = false;
       }
     });
@@ -229,8 +505,11 @@
       clearInterval(stopWatchInterval);
       stopWatchElapsed = 0;
       stopWatchTime.textContent = '00:00:00';
-      startStopwatchBtn.textContent = 'Start';
+      startStopwatchBtn.textContent = 'Start Work';
+      startStopwatchBtn.classList.remove('pulse');
       stopWatchRunning = false;
+      resetStopwatchBtn.classList.add('success-flash');
+      setTimeout(() => resetStopwatchBtn.classList.remove('success-flash'), 600);
     });
 
     // Timer
@@ -249,6 +528,11 @@
       const seconds = parseInt(timerInput.value);
       if (isNaN(seconds) || seconds <= 0 || seconds > 3600) {
         alert("Please enter a valid duration (1-3600 seconds).");
+        timerInput.style.borderColor = '#ef4444';
+        timerInput.focus();
+        setTimeout(() => {
+          timerInput.style.borderColor = '';
+        }, 2000);
         return;
       }
       timerRemaining = seconds;
@@ -263,14 +547,20 @@
     }
 
     function startTimer() {
+      setTimerBtn.style.display = 'none';
+      pauseTimerBtn.style.display = 'inline-block';
+      timerTime.classList.add('pulse');
+      
       timerInterval = setInterval(() => {
         if (!timerPaused && timerRemaining > 0) {
           timerRemaining--;
           timerTime.textContent = formatTimer(timerRemaining);
         } else if (timerRemaining === 0) {
           clearInterval(timerInterval);
-          alert("⏰ Task Complete! Time to check your crop.");
-          if (navigator.vibrate) navigator.vibrate(500);
+          timerTime.classList.remove('pulse');
+          timerTime.classList.add('success-flash');
+          alert("⏰ Task Complete! Time to check your crop. 🌱");
+          if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 200]);
           resetTimer();
         }
       }, 1000);
@@ -280,12 +570,14 @@
       timerPaused = true;
       pauseTimerBtn.style.display = 'none';
       resumeTimerBtn.style.display = 'inline-block';
+      timerTime.classList.remove('pulse');
     });
 
     resumeTimerBtn.addEventListener('click', () => {
       timerPaused = false;
       pauseTimerBtn.style.display = 'inline-block';
       resumeTimerBtn.style.display = 'none';
+      timerTime.classList.add('pulse');
     });
 
     function resetTimer() {
@@ -294,7 +586,9 @@
       timerPaused = false;
       timerRemaining = 0;
       timerTime.textContent = '00:00';
+      timerTime.classList.remove('pulse', 'success-flash');
       timerInput.value = '';
+      setTimerBtn.style.display = 'inline-block';
       pauseTimerBtn.style.display = 'none';
       resumeTimerBtn.style.display = 'none';
     }
@@ -302,16 +596,13 @@
     // Weather
     function fetchWeather() {
       const weatherCard = document.getElementById('weather-card');
-      const cache = localStorage.getItem('weatherCache');
-      const cacheTime = localStorage.getItem('weatherCacheTime');
-
-      if (cache && cacheTime && (Date.now() - cacheTime < 5 * 60 * 1000)) {
-        weatherCard.innerHTML = cache + '<br><small class="offline">Offline mode</small>';
-        return;
-      }
-
+      
       if (!navigator.geolocation) {
-        weatherCard.textContent = 'Location not supported.';
+        weatherCard.innerHTML = `
+          <strong>🌤️ Weather Center</strong><br>
+          <div style="margin: 12px 0;">Check detailed weather conditions</div>
+          <a href="https://weather-app-xi-fawn-41.vercel.app/" target="_blank" class="weather-link">Open Weather App</a>
+        `;
         return;
       }
 
@@ -324,26 +615,33 @@
             .then(res => res.json())
             .then(data => {
               const html = `
-                <strong>${data.name}</strong><br>
-                🌡️ ${Math.round(data.main.temp)}°C | 💧 ${data.main.humidity}%<br>
-                ${data.weather[0].description}
-                <br>
+                <strong>📍 ${data.name}</strong><br>
+                <div style="font-size: 1.1rem; margin: 8px 0; font-weight: 500;">
+                  🌡️ ${Math.round(data.main.temp)}°C | 💧 ${data.main.humidity}%
+                </div>
+                <div style="margin: 8px 0; opacity: 0.9; text-transform: capitalize;">
+                  ${data.weather[0].description}
+                </div>
                 <img src="https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png" alt="Weather" />
+                <br>
+                <a href="https://weather-app-xi-fawn-41.vercel.app/" target="_blank" class="weather-link">Detailed Forecast</a>
               `;
               weatherCard.innerHTML = html;
-              localStorage.setItem('weatherCache', html);
-              localStorage.setItem('weatherCacheTime', Date.now());
             })
             .catch(() => {
-              if (cache) {
-                weatherCard.innerHTML = cache + '<br><small class="offline">Using cached data</small>';
-              } else {
-                weatherCard.textContent = 'Weather unavailable.';
-              }
+              weatherCard.innerHTML = `
+                <strong>🌤️ Weather Center</strong><br>
+                <div style="margin: 12px 0;">Unable to fetch current conditions</div>
+                <a href="https://weather-app-xi-fawn-41.vercel.app/" target="_blank" class="weather-link">Open Weather App</a>
+              `;
             });
         },
         () => {
-          weatherCard.textContent = 'Enable location for weather updates.';
+          weatherCard.innerHTML = `
+            <strong>🌤️ Weather Center</strong><br>
+            <div style="margin: 12px 0;">Location access needed for local weather</div>
+            <a href="https://weather-app-xi-fawn-41.vercel.app/" target="_blank" class="weather-link">Open Weather App</a>
+          `;
         }
       );
     }
@@ -374,6 +672,13 @@
     }
 
     function switchView(orientation) {
+      // Remove all orientation classes first
+      body.className = '';
+      
+      // Add the appropriate orientation class
+      body.classList.add(orientation);
+      
+      // Switch the active view
       clockView.classList.remove('active');
       stopwatchView.classList.remove('active');
       timerView.classList.remove('active');
@@ -382,17 +687,44 @@
         clockView.classList.add('active');
       } else if (orientation === 'landscape') {
         stopwatchView.classList.add('active');
-        setTimeout(fetchWeather, 500);
+        setTimeout(fetchWeather, 800);
       } else if (orientation === 'portrait-upside-down') {
         timerView.classList.add('active');
       }
     }
 
+    // Initialize with default orientation
+    function detectInitialOrientation() {
+      const isLandscape = window.matchMedia("(orientation: landscape)").matches;
+      if (isLandscape) {
+        switchView('landscape');
+      } else {
+        switchView('portrait-upright');
+      }
+    }
+
     if (window.DeviceOrientationEvent) {
       window.addEventListener('deviceorientation', handleOrientation, true);
+      detectInitialOrientation();
     } else {
-      alert('Device orientation not supported.');
+      console.log('Device orientation not supported, using default view.');
+      switchView('portrait-upright');
     }
+
+    // Add touch feedback
+    document.addEventListener('touchstart', function(e) {
+      if (e.target.tagName === 'BUTTON') {
+        e.target.style.transform = 'scale(0.95)';
+      }
+    });
+
+    document.addEventListener('touchend', function(e) {
+      if (e.target.tagName === 'BUTTON') {
+        setTimeout(() => {
+          e.target.style.transform = '';
+        }, 100);
+      }
+    });
   </script>
 </body>
 </html>
